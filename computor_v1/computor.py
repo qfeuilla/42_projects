@@ -146,21 +146,25 @@ for it in deg.items():
 		reduced += ("+ " + it[1][0] + " ") if reduced != "" else it[1][0] + " "
 
 print("Reduced form: " + reduced + "= 0")
-pdeg = sorted(deg.keys(), key= lambda x:int(x))[-1]
+pdeg = sorted(deg.keys(), key= lambda x:int(x))[-1] if len(deg.keys()) > 0 else 0
 print("Polynomial degree: " + str(pdeg))
 if (pdeg > 2):
 	print("The polynomial degree is strictly greater than 2, I can't solve.")
 elif (pdeg == 0):
-	if float(deg[0][0].split()[0]) == 0:
+	if inp.count("X") > 0 and inp.count("X^0") < inp.count("X"):
 		print("All real numbers are solutions")
 	else:
 		print("The equation has no solutions")
 elif (pdeg == 1):
 	print("The solution is:")
-	print(-(deg[0][1] / deg[1][1]))
+	a = deg[1][1]
+	if not (0 in deg.keys()):
+		b = 0
+	else:
+		b = deg[0][1]
+	print("{:g}".format(-(b / a)))
 else:
 	#let's solve the equation !!
-	print("Let's solve it")
 	a = deg[2][1]
 	if not (1 in deg.keys()):
 		b = 0
