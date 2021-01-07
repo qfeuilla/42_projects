@@ -3,12 +3,20 @@
 import sys
 
 def sqrt(x):
-	old = 0
-	n = 1
-	while n != old:
-		old = n
-		n = (n + x/n) * 0.5
-	return n
+	mid = 0
+	lo = 0
+	hi = x
+	accuracy = 100
+	while accuracy:
+		mid = (lo + hi) / 2
+		if (mid**2 == x):
+			return mid
+		if (mid**2 > x):
+			hi = mid
+		else:
+			lo = mid
+		accuracy -= 1
+	return mid
 
 try:
 	inp = sys.argv[1]
@@ -19,8 +27,8 @@ except :
 	exit()
 
 split_equ = inp.split('=')
-if (len(split_equ) != 2):
-	print("input is not an equation")
+if (len(split_equ) != 2 or "X" not in inp):
+	print("input is not an equation with unknowns")
 	exit()
 
 def simplify(term):
@@ -32,11 +40,16 @@ def simplify(term):
 		term = term.replace("X^0", "1")
 	nb = []
 	Xpow = " "
+	Xindices = [i for i, value in enumerate(term) if value == "X"]
+	for i in Xindices:
+		term = term[:i] + "*" + term[i:]
+	print(term.split("*"))
 	for sub in term.split("*"):
-		try:
-			nb.append(float(sub))
-		except: 
-			Xpow = sub 
+		if sub != "":
+			try:
+				nb.append(float(sub))
+			except: 
+				Xpow = sub
 	mul = 1
 	for n in nb:
 		mul *= n
@@ -133,7 +146,12 @@ for k in keys:
 	for e in deg[k]:
 		som += float(e.split('*')[0])
 	if som != 0:
-		deg[k] = ("{:g} * X^{}".format(som, k), som)
+		if (som == 1 and k != 0):
+			deg[k] = ("X^{}".format(k), som) if k != 1 else ("X", som)
+		elif (som == -1 and k != 0):
+			deg[k] = ("-X^{}".format(k), som) if k != 1 else ("-X", som)
+		else:
+			deg[k] = (("{:g}X^{}".format(som, k), som) if k != 1 else ("{:g}X".format(som), som)) if k != 0 else ("{:g}".format(som), som)
 	else:
 		del deg[k]
 
@@ -145,13 +163,14 @@ for it in deg.items():
 	else:
 		reduced += ("+ " + it[1][0] + " ") if reduced != "" else it[1][0] + " "
 
+reduced = reduced if reduced != "" else "0 "
 print("Reduced form: " + reduced + "= 0")
 pdeg = sorted(deg.keys(), key= lambda x:int(x))[-1] if len(deg.keys()) > 0 else 0
 print("Polynomial degree: " + str(pdeg))
 if (pdeg > 2):
 	print("The polynomial degree is strictly greater than 2, I can't solve.")
 elif (pdeg == 0):
-	if inp.count("X") > 0 and inp.count("X^0") < inp.count("X"):
+	if reduced == "0 ":
 		print("All real numbers are solutions")
 	else:
 		print("The equation has no solutions")
