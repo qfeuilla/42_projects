@@ -1,0 +1,5 @@
+
+executables/level5:     file format elf32-i386
+
+Contents of section .rodata:
+ 80485e8 03000000 01000200 2f62696e 2f736800  ......../bin/sh.
