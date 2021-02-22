@@ -1,7 +1,0 @@
-
-executables/level7:     file format elf32-i386
-
-Contents of section .rodata:
- 80486d8 03000000 01000200 2573202d 2025640a  ........%s - %d.
- 80486e8 0072002f 686f6d65 2f757365 722f6c65  .r./home/user/le
- 80486f8 76656c38 2f2e7061 7373007e 7e00      vel8/.pass.~~.  

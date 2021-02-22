@@ -1,6 +1,0 @@
-
-executables/level3:     file format elf32-i386
-
-Contents of section .rodata:
- 80485f8 03000000 01000200 57616974 20776861  ........Wait wha
- 8048608 743f210a 002f6269 6e2f7368 00        t?!../bin/sh.   

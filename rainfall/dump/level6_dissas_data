@@ -1,7 +1,0 @@
-
-executables/level6:     file format elf32-i386
-
-Contents of section .rodata:
- 80485a8 03000000 01000200 2f62696e 2f636174  ......../bin/cat
- 80485b8 202f686f 6d652f75 7365722f 6c657665   /home/user/leve
- 80485c8 6c372f2e 70617373 004e6f70 6500      l7/.pass.Nope.  
