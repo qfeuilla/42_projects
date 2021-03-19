@@ -11,6 +11,8 @@
 int max_fd;
 int actual_clientid;
 
+#define DEBUG 1
+
 typedef struct  s_client
 {
     int fd;
@@ -92,6 +94,8 @@ void send_all(t_client *clients, int fd, char *str) {
     for (; tmp; tmp = tmp->next)
         if (tmp->fd != fd)
             send(tmp->fd, str, strlen(str), 0);
+	if (DEBUG)
+		write(1, str, strlen(str));
 }
 
 int extract_message(char **buf, char **msg)
@@ -122,8 +126,9 @@ int extract_message(char **buf, char **msg)
 }
 
 
-char *str_join(char *buf, char *add)
+char *str_join_new(char *buf, char *add)
 {
+	write(1, "aaaa\n", 5);
 	char	*newbuf;
 	int		len;
 
@@ -133,13 +138,15 @@ char *str_join(char *buf, char *add)
 		len = strlen(buf);
 	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
 	if (newbuf == 0)
-        free(buf);
-		return (0);
+		write(1, "join error\n", 11);
+		free(buf);
+		return (NULL);
 	newbuf[0] = 0;
 	if (buf != 0)
 		strcat(newbuf, buf);
 	free(buf);
 	strcat(newbuf, add);
+	write(1, "join ok\n", 8);
 	return (newbuf);
 }
 
@@ -227,7 +234,7 @@ int main(int ac, char **av) {
                             send_all(clients, connfd, str);
                             free(str);
                         } else if (recv_res > 0) {
-                            if (!(jbuff = malloc(1000))) {
+							if (!(jbuff = malloc(1000))) {
                                 close_all_clients(&clients);
                                 close(sockfd);
                                 free(buff);
@@ -235,15 +242,20 @@ int main(int ac, char **av) {
                             }
                             strcpy(jbuff, buff);
                             bzero(buff, 1000);
-                            while ((recv_res = recv(connfd, buff, 1000, 0)) > 1) {
-                                if (!(jbuff = str_join(jbuff, buff))) {
+                            
+							write(1, "ok1\n", 4); 
+							while ((recv_res = recv(connfd, buff, 1000, MSG_DONTWAIT)) > 0) {
+								write(1, "ok2\n",4);
+								if (!(jbuff = str_join_new(jbuff, buff))) {
                                     close_all_clients(&clients);
                                     close(sockfd);
                                     free(buff);
                                     exit_fatal();
                                 }
+								write(1, "ok3\n",4);
                                 bzero(buff, 1000);
                             }
+							write(1, "ok4\n",4);
                             char *msg;
                             while (extract_message(&jbuff, &msg)) {
                                 if (!(str = malloc(strlen(msg) + 35))) {
