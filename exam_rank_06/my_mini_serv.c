@@ -61,7 +61,6 @@ int remove_client(t_client **clients, int fd) {
 }
 
 void close_all_clients(t_client *clients) {
-    t_client *tmp = clients;
     while (clients) 
 		remove_client(&clients, clients->fd);
 }
