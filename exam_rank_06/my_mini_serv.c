@@ -250,7 +250,7 @@ int main(int ac, char **av) {
                                 free(msg);
                                 free(str);
                             }
-                            free(jbuff)
+                            free(jbuff);
                         }
                     } 
                 }
