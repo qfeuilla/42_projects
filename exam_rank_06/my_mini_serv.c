@@ -60,9 +60,9 @@ int remove_client(t_client **clients, int fd) {
     return (id);
 }
 
-void close_all_clients(t_client *clients) {
-    while (clients) 
-		remove_client(&clients, clients->fd);
+void close_all_clients(t_client **clients) {
+    while (*clients) 
+		remove_client(clients, (*clients)->fd);
 }
 
 int add_client(int connfd, t_client **clients, int servfd) {
@@ -121,11 +121,32 @@ int extract_message(char **buf, char **msg)
 	return (0);
 }
 
+
+char *str_join(char *buf, char *add)
+{
+	char	*newbuf;
+	int		len;
+
+	if (buf == 0)
+		len = 0;
+	else
+		len = strlen(buf);
+	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
+	if (newbuf == 0)
+		return (0);
+	newbuf[0] = 0;
+	if (buf != 0)
+		strcat(newbuf, buf);
+	free(buf);
+	strcat(newbuf, add);
+	return (newbuf);
+}
+
 int main(int ac, char **av) {
     int sockfd, connfd;
     unsigned int len;
     struct sockaddr_in servaddr, cli;
-    char *buff, *str;
+    char *buff, *str, *jbuff, *tmp;
 
     int port;
     fd_set set_read;
@@ -179,7 +200,7 @@ int main(int ac, char **av) {
                 }
             } else {
                 t_client *tmp = clients;
-				if ((buff = malloc(4097)) == NULL) {
+				if ((buff = malloc(1000)) == NULL) {
 					close_all_clients(clients);
 					close(sockfd);
 					exit_fatal();
@@ -191,8 +212,8 @@ int main(int ac, char **av) {
                     tmp = tmp->next;
                     
                     if (FD_ISSET(connfd, &set_read)) {
-                        bzero(buff, 4097);
-                        recv_res = recv(connfd, buff, 4096, 0);
+                        bzero(buff, 1000);
+                        recv_res = recv(connfd, buff, 1000, 0);
                         if (recv_res == 0) {
                             id = remove_client(&clients, connfd);
                             if (!(str = malloc(strlen("server: client  just left\n") + 24))) {
@@ -204,27 +225,37 @@ int main(int ac, char **av) {
                             send_all(clients, connfd, str);
                             free(str);
                         } else if (recv_res > 0) {
-                            if (!(str = malloc(4097 + 32))) {
+                            if (!(jbuff = malloc(1000))) {
                                 close_all_clients(clients);
                                 close(sockfd);
                                 exit_fatal();
                             }
-                            char *msg;
-                            while (extract_message(&buff, &msg)) {
-                                sprintf(str, "client %d: %s", id, msg);
-                                free(msg);
-                                send_all(clients, connfd, str);
+                            strcpy(jbuff, buff);
+                            bzero(buff, 1000);
+                            while ((recv_res = recv(connfd, buff, 1000, 0)) > 0) {
+                                tmp = jbuff;
+                                jbuff = str_join(jbuff, buff);
+                                free(tmp);
+                                bzero(buff, 1000);
                             }
-                            free(str);
+                            char *msg;
+                            while (extract_message(&jbuff, &msg)) {
+                                if (!(str = malloc(strlen(msg) + 35))) {
+                                    close_all_clients(clients);
+                                    close(sockfd);
+                                    exit_fatal();
+                                }
+                                sprintf(str, "client %d: %s", id, msg);
+                                send_all(clients, connfd, str);
+                                free(msg);
+                                free(str);
+                            }
+                            free(jbuff)
                         }
-                    }
+                    } 
                 }
                 free(buff);
             }
-		} else {
-			close_all_clients(clients);
-			close(sockfd);
-			exit_fatal();
 		}
     }
 }
