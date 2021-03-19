@@ -40,7 +40,7 @@ void init_set(int fd, fd_set *set_read, t_client *clients) {
 
 int remove_client(t_client **clients, int fd) {
     t_client *tmp = *clients;
-    int id;
+    int id = -1;
 
     if (tmp && tmp->fd == fd) {
         (*clients) = tmp->next;
@@ -62,8 +62,8 @@ int remove_client(t_client **clients, int fd) {
 
 void close_all_clients(t_client *clients) {
     t_client *tmp = clients;
-    for (; tmp; tmp = tmp->next)
-        remove_client(&clients, tmp->fd);
+    while (clients) 
+		remove_client(&clients, clients->fd);
 }
 
 int add_client(int connfd, t_client **clients, int servfd) {
