@@ -133,6 +133,7 @@ char *str_join(char *buf, char *add)
 		len = strlen(buf);
 	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
 	if (newbuf == 0)
+        free(buf);
 		return (0);
 	newbuf[0] = 0;
 	if (buf != 0)
@@ -219,6 +220,7 @@ int main(int ac, char **av) {
                             if (!(str = malloc(strlen("server: client  just left\n") + 24))) {
                                 close_all_clients(&clients);
                                 close(sockfd);
+                                free(buff);
                                 exit_fatal();
                             }
                             sprintf(str, "server: client %d just left\n", id);
@@ -228,12 +230,18 @@ int main(int ac, char **av) {
                             if (!(jbuff = malloc(1000))) {
                                 close_all_clients(&clients);
                                 close(sockfd);
+                                free(buff);
                                 exit_fatal();
                             }
                             strcpy(jbuff, buff);
                             bzero(buff, 1000);
-                            while ((recv_res = recv(connfd, buff, 1000, 0)) > 0) {
-                                jbuff = str_join(jbuff, buff);
+                            while ((recv_res = recv(connfd, buff, 1000, 0)) > 1) {
+                                if (!(jbuff = str_join(jbuff, buff))) {
+                                    close_all_clients(&clients);
+                                    close(sockfd);
+                                    free(buff);
+                                    exit_fatal();
+                                }
                                 bzero(buff, 1000);
                             }
                             char *msg;
@@ -241,6 +249,8 @@ int main(int ac, char **av) {
                                 if (!(str = malloc(strlen(msg) + 35))) {
                                     close_all_clients(&clients);
                                     close(sockfd);
+                                    free(buff);
+                                    free(jbuff);
                                     exit_fatal();
                                 }
                                 sprintf(str, "client %d: %s", id, msg);
