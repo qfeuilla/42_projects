@@ -38,10 +38,32 @@ void init_set(int fd, fd_set *set_read, t_client *clients) {
     FD_SET(fd, set_read);
 }
 
+int remove_client(t_client **clients, int fd) {
+    t_client *tmp = *clients;
+    int id;
+
+    if (tmp && tmp->fd == fd) {
+        (*clients) = tmp->next;
+        id = tmp->id;
+        close(tmp->fd);
+        free(tmp);
+    } else if (tmp) {
+        t_client *prev;
+        for (; tmp && tmp->next && tmp->next->fd != fd; tmp = tmp->next) ;
+        prev = tmp;
+        tmp = tmp->next;
+        prev->next = tmp->next;
+        id = tmp->id;
+        close(tmp->fd);
+        free(tmp);
+    }
+    return (id);
+}
+
 void close_all_clients(t_client *clients) {
     t_client *tmp = clients;
     for (; tmp; tmp = tmp->next)
-        close(tmp->fd);
+        remove_client(&clients, tmp->fd);
 }
 
 int add_client(int connfd, t_client **clients, int servfd) {
@@ -71,28 +93,6 @@ void send_all(t_client *clients, int fd, char *str) {
     for (; tmp; tmp = tmp->next)
         if (tmp->fd != fd)
             send(tmp->fd, str, strlen(str), 0);
-}
-
-int remove_client(t_client **clients, int fd) {
-    t_client *tmp = *clients;
-    int id;
-
-    if (tmp && tmp->fd == fd) {
-        (*clients) = tmp->next;
-        id = tmp->id;
-        close(tmp->fd);
-        free(tmp);
-    } else if (tmp) {
-        t_client *prev;
-        for (; tmp && tmp->next && tmp->next->fd != fd; tmp = tmp->next) ;
-        prev = tmp;
-        tmp = tmp->next;
-        prev->next = tmp->next;
-        id = tmp->id;
-        close(tmp->fd);
-        free(tmp);
-    }
-    return (id);
 }
 
 int extract_message(char **buf, char **msg)
