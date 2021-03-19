@@ -179,16 +179,17 @@ int main(int ac, char **av) {
                 }
             } else {
                 t_client *tmp = clients;
+				if ((buff = malloc(4097)) == NULL) {
+					close_all_clients(clients);
+					close(sockfd);
+					exit_fatal();
+				}
                 while (tmp)
                 {
                     connfd = tmp->fd;
                     id = tmp->id;
                     tmp = tmp->next;
-                    if ((buff = malloc(4097)) == NULL) {
-                        close_all_clients(clients);
-                        close(sockfd);
-                        exit_fatal();
-                    }
+                    
                     if (FD_ISSET(connfd, &set_read)) {
                         bzero(buff, 4097);
                         recv_res = recv(connfd, buff, 4096, 0);
@@ -217,9 +218,13 @@ int main(int ac, char **av) {
                             free(str);
                         }
                     }
-                    free(buff);
                 }
+                free(buff);
             }
-        }
+		} else {
+			close_all_clients(clients);
+			close(sockfd);
+			exit_fatal();
+		}
     }
 }
