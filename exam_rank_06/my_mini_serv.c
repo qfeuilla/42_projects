@@ -128,7 +128,6 @@ int extract_message(char **buf, char **msg)
 
 char *str_join_new(char *buf, char *add)
 {
-	write(1, "aaaa\n", 5);
 	char	*newbuf;
 	int		len;
 
@@ -136,17 +135,16 @@ char *str_join_new(char *buf, char *add)
 		len = 0;
 	else
 		len = strlen(buf);
-	newbuf = malloc(sizeof(*newbuf) * (len + strlen(add) + 1));
-	if (newbuf == 0)
-		write(1, "join error\n", 11);
+	newbuf = malloc((len + strlen(add) + 1));
+	if (!newbuf) {
 		free(buf);
 		return (NULL);
+	}
 	newbuf[0] = 0;
 	if (buf != 0)
 		strcat(newbuf, buf);
 	free(buf);
 	strcat(newbuf, add);
-	write(1, "join ok\n", 8);
 	return (newbuf);
 }
 
@@ -208,7 +206,7 @@ int main(int ac, char **av) {
                 }
             } else {
                 t_client *tmp = clients;
-				if ((buff = malloc(1000)) == NULL) {
+				if ((buff = malloc(100)) == NULL) {
 					close_all_clients(&clients);
 					close(sockfd);
 					exit_fatal();
@@ -220,8 +218,8 @@ int main(int ac, char **av) {
                     tmp = tmp->next;
                     
                     if (FD_ISSET(connfd, &set_read)) {
-                        bzero(buff, 1000);
-                        recv_res = recv(connfd, buff, 1000, 0);
+                        bzero(buff, 100);
+                        recv_res = recv(connfd, buff, 100, 0);
                         if (recv_res == 0) {
                             id = remove_client(&clients, connfd);
                             if (!(str = malloc(strlen("server: client  just left\n") + 24))) {
@@ -234,28 +232,24 @@ int main(int ac, char **av) {
                             send_all(clients, connfd, str);
                             free(str);
                         } else if (recv_res > 0) {
-							if (!(jbuff = malloc(1000))) {
+							if (!(jbuff = malloc(100))) {
                                 close_all_clients(&clients);
                                 close(sockfd);
                                 free(buff);
                                 exit_fatal();
                             }
                             strcpy(jbuff, buff);
-                            bzero(buff, 1000);
+                            bzero(buff, 100);
                             
-							write(1, "ok1\n", 4); 
-							while ((recv_res = recv(connfd, buff, 1000, MSG_DONTWAIT)) > 0) {
-								write(1, "ok2\n",4);
+							while ((recv_res = recv(connfd, buff, 100, MSG_DONTWAIT)) > 0) {
 								if (!(jbuff = str_join_new(jbuff, buff))) {
                                     close_all_clients(&clients);
                                     close(sockfd);
                                     free(buff);
                                     exit_fatal();
                                 }
-								write(1, "ok3\n",4);
-                                bzero(buff, 1000);
+                                bzero(buff, 100);
                             }
-							write(1, "ok4\n",4);
                             char *msg;
                             while (extract_message(&jbuff, &msg)) {
                                 if (!(str = malloc(strlen(msg) + 35))) {
