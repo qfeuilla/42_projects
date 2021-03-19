@@ -146,7 +146,7 @@ int main(int ac, char **av) {
     int sockfd, connfd;
     unsigned int len;
     struct sockaddr_in servaddr, cli;
-    char *buff, *str, *jbuff, *bufftmp;
+    char *buff, *str, *jbuff;
 
     int port;
     fd_set set_read;
@@ -233,9 +233,7 @@ int main(int ac, char **av) {
                             strcpy(jbuff, buff);
                             bzero(buff, 1000);
                             while ((recv_res = recv(connfd, buff, 1000, 0)) > 0) {
-                                bufftmp = jbuff;
                                 jbuff = str_join(jbuff, buff);
-                                free(bufftmp);
                                 bzero(buff, 1000);
                             }
                             char *msg;
