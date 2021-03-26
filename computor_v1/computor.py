@@ -1,4 +1,3 @@
-#!/bin/python3
 
 import sys
 
@@ -31,6 +30,23 @@ if (len(split_equ) != 2 or "X" not in inp):
 	print("input is not an equation with unknowns")
 	exit()
 
+def get_deg(term):
+	if (term.count("^")):
+		ind = term.index("^")
+	elif (term.count("X")):
+		return 1
+	else:
+		return 0
+	try:
+		int(term[ind+1]) # raise the error if not int on first
+		end = ind+1
+		while end < len(term) and (term[end].isnumeric()):
+			end += 1
+		return (int(term[ind+1:end]))
+	except:
+		print("please input a valid equation (no num after ^)")
+		exit()
+
 def simplify(term):
 	'''
 		This function take a term and symplified it suched that 
@@ -39,21 +55,20 @@ def simplify(term):
 	if ("X^0" in term):
 		term = term.replace("X^0", "1")
 	nb = []
-	Xpow = " "
+	Xpow = 0
 	Xindices = [i for i, value in enumerate(term) if value == "X"]
 	for i in Xindices:
 		term = term[:i] + "*" + term[i:]
-	print(term.split("*"))
 	for sub in term.split("*"):
 		if sub != "":
 			try:
 				nb.append(float(sub))
 			except: 
-				Xpow = sub
+				Xpow += get_deg(sub)
 	mul = 1
 	for n in nb:
 		mul *= n
-	ret = "{}".format(mul) + ("*{}".format(Xpow) if Xpow != " " else " ")
+	ret = "{}".format(mul) + ("*X{}".format("^" + str(Xpow) if Xpow > 1 else "") if Xpow != 0 else " ")
 	if ret == "1*" or ret == "1 ":
 		return None
 	return ret.replace(" ", "")
@@ -77,23 +92,6 @@ def get_each_part(member):
 
 left_split = get_each_part(split_equ[0])
 righ_split = get_each_part(split_equ[1])
-
-def get_deg(term):
-	if (term.count("^")):
-		ind = term.index("^")
-	elif (term.count("X")):
-		return 1
-	else:
-		return 0
-	try:
-		int(term[ind+1]) # raise the error if not int on first
-		end = ind+1
-		while end < len(term) and (term[end].isnumeric()):
-			end += 1
-		return (int(term[ind+1:end]))
-	except:
-		print("please input a valid equation (no num after ^)")
-		exit()
 
 def reduce_p_m(part, inverse=False):
 	'''
