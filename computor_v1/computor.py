@@ -25,8 +25,16 @@ except :
 	print("please input a valid command string")
 	exit()
 
+valid = " X^0123456789-+=*"
+count = 0
+for v in valid:
+	count += inp.count(v)
+if count != len(inp):
+	print("There is some invalid character in you equation")
+	exit()
+
 split_equ = inp.split('=')
-if (len(split_equ) != 2 or "X" not in inp):
+if (len(split_equ) != 2 or "X" not in inp or len(split_equ[1].split()) == 0):
 	print("input is not an equation with unknowns")
 	exit()
 
@@ -173,13 +181,15 @@ elif (pdeg == 0):
 	else:
 		print("The equation has no solutions")
 elif (pdeg == 1):
-	print("The solution is:")
 	a = deg[1][1]
 	if not (0 in deg.keys()):
 		b = 0
 	else:
 		b = deg[0][1]
-	print("{:g}".format(-(b / a)))
+	res = -(b / a)
+	res = res if res != -0 else 0
+	print("answer is -(b / a) with a = {} and b = {} :".format(a, b))
+	print("ans = {:g}".format(res))
 else:
 	#let's solve the equation !!
 	a = deg[2][1]
@@ -192,16 +202,24 @@ else:
 	else:
 		c = deg[0][1]
 	delta = b**2 - 4 * a * c
+	print("discriminant is calculated with :")
+	print("delta = b^2 - 4 * a * c with a = {}, b = {} and c = {}".format(a, b, c))
+	print("delta = {}".format(delta))
 	tmp = -b / (2 * a)
 	tmp2 = sqrt(delta if delta > 0 else -delta)
 	if delta > 0:
-		print("Discriminant is strictly positive, the two solutions are:")
-		print("{:g}".format((-b - tmp2) / (2 * a)))
-		print("{:g}".format((-b + tmp2) / (2 * a)))
+		print("Discriminant is strictly positive, the two roots are:")
+		print("root1 = (-b - sqrt(delta)) / (2 * a)")
+		print("root1 = {:g}".format((-b - tmp2) / (2 * a)))
+		print("root2 = (-b + sqrt(delta)) / (2 * a)")
+		print("root2 = {:g}".format((-b + tmp2) / (2 * a)))
 	if delta == 0:
-		print("Discriminant is equal to zero, the solution is:")
-		print("{:g}".format(tmp))
+		print("Discriminant is equal to zero, the root is:")
+		print("root = -b / (2 * a)")
+		print("root = {:g}".format(tmp))
 	if delta < 0:
-		print("Discriminant is strictly negative, the two solutions are complex:")
-		print("{:g}".format(tmp) + "-" + "{:g}".format(tmp2 / (2 * a)) + "i")
-		print("{:g}".format(tmp) + "+" + "{:g}".format(tmp2 / (2 * a)) + "i")
+		print("Discriminant is strictly negative, the two roots are complex:")
+		print("root1 = (-b - sqrt(-delta)) / (2 * a)")
+		print("root1 = {:g}".format(tmp) + " - " + "{:g}".format(tmp2 / (2 * a)) + "i")
+		print("root2 = (-b + sqrt(-delta)) / (2 * a)")
+		print("root2 = {:g}".format(tmp) + " + " + "{:g}".format(tmp2 / (2 * a)) + "i")
