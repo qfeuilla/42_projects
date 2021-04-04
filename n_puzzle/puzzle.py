@@ -1,4 +1,32 @@
 import numpy as np
+import heapq
+
+class Puzzle_Node():
+	def __init__(self, parent=None, node_map=None, size=0, previous="None"):
+		self.parent = parent
+		self.previous = previous
+		self.node_map = node_map
+		self.size = size
+		self._hash = hash(str(node_map))
+		self.g = 0
+		self.h = 0
+
+	def __eq__(self, other):
+		return np.sum(np.equal(self.node_map, other.node_map)) == self.size**2
+	
+	def __lt__(self, other):
+		if self.h != other.h:
+			return self.h < other.h
+		return self.g < other.g
+
+	def __hash__(self):
+		return self._hash
+
+def is_in(child_list, child, use_sup=False):
+	for el_child in child_list:
+		if child == el_child and (child.g > el_child.g or not use_sup) :
+			return True
+	return False
 
 class Puzzle():
 	def __init__(self, use_file=False, size=0, input_file=None):
@@ -13,7 +41,7 @@ class Puzzle():
 		self.solution_maps = []
 		print("map to solve : ")
 		self.show_map(self.current_map)
-		self.answer = self.generate_answer()
+		self.solution = self.generate_solution()
 
 	def map_from_file(self, file):
 		data = open(file)
@@ -66,11 +94,12 @@ class Puzzle():
 			data = self.current_map
 		print('\n'.join([' '.join([str(int(l)).center(5, ' ') for l in lst]) for lst in data]))
 	
-	def inversion_num(self):
+	def unfold_map(self, data=None):
+		if data is None:
+			data = self.current_map
 		ordered_map = list()
 		x = 0
 		y = 0
-
 		for i in range(self.size * 2 - 1):
 			res = i % 4
 			if i > 0:
@@ -85,10 +114,14 @@ class Puzzle():
 				y += (1 if res == 1 else -1) if res % 2 else 0
 			x += (-1 if res == 0 else 1) if not res % 2 else 0
 			y += (-1 if res == 1 else 1) if res % 2 else 0
+		return ordered_map
+
+	def inversion_num(self, data=None):
+		if data is None:
+			data = self.current_map
+		ordered_map = self.unfold_map(data)
 		reverse_global = 0
-		map_index = {}
-		for i, k in enumerate(ordered_map):
-			map_index[k] = i
+		map_index = {k:i for i, k in enumerate(ordered_map)}
 		for k in map_index.keys():
 			curr_ind = map_index[k]
 			for smaller in range(1, k):
@@ -97,18 +130,10 @@ class Puzzle():
 		return reverse_global
 
 	def is_sovable(self):
-		div = not self.inversion_num() % 2
-		if self.size % 2 == 1:
-			return div
-		else:
-			y, x = np.where(self.current_map == 0)
-			if y % 2 == 0:
-				return not div
-			else:
-				return div
+		return not self.inversion_num() % 2
 
-	def generate_answer(self):
-		answ = np.zeros((self.size, self.size), dtype=np.int)
+	def generate_solution(self):
+		sol = np.zeros((self.size, self.size), dtype=np.int)
 		current = 1
 		x = 0
 		y = 0
@@ -120,18 +145,126 @@ class Puzzle():
 			while ((x < self.size and res == 0) 
 					or (y < self.size and res == 1) 
 					or (x >= 0 and res == 2) 
-					or (y >= 0 and res == 3)) and answ[y][x] == 0:
-				answ[y][x] = current
+					or (y >= 0 and res == 3)) and sol[y][x] == 0:
+				sol[y][x] = current
 				current += 1
 				x += (1 if res == 0 else -1) if not res % 2 else 0
 				y += (1 if res == 1 else -1) if res % 2 else 0
 			x += (-1 if res == 0 else 1) if not res % 2 else 0
 			y += (-1 if res == 1 else 1) if res % 2 else 0
-		answ[y][x] = 0
-		return answ
+		sol[y][x] = 0
+		return sol
+
+	def generate_manhattan(self, data):
+		man_map = np.zeros((self.size, self.size), dtype=np.int)
+		for y in range(self.size):
+			for x in range(self.size):
+				sy, sx = np.where(self.solution == data[y][x])
+				man_map[y][x] = np.absolute(x - sx) + np.absolute(y - sy)
+		return man_map
+
+	def manhattan(self, data=None):
+		if data is None:
+			data = self.current_map
+		grid = self.generate_manhattan(data)
+		return np.sum(grid)
+
+	def solve(self, metric="manhattan"):
+		if metric == "manhattan":
+			metric_fnc = self.manhattan
+		
+		# Create start and end node
+		start_metric = metric_fnc(self.current_map)
+		start_node = Puzzle_Node(None, self.current_map, self.size)
+		start_node.g = 0
+		start_node.h = start_metric
+		end_node = Puzzle_Node(None, self.solution, self.size)
+		end_node.g = end_node.h = 0
+
+		# Initialize both open and closed list
+		open_list = []
+		heapq.heappush(open_list, start_node)
+		closed_set = {}
+		open_set = {}
+		open_set[start_node] = start_node
+
+		min_manhattan = 1000000
+
+		# Loop until you find the end
+		while len(open_list):
+			while True:
+				try:
+					current_node = heapq.heappop(open_list)
+				except:
+					current_node = None
+					break
+				if current_node.previous == "Delete":
+					continue
+				del open_set[current_node]
+				closed_set[current_node] = 0
+				break
+			
+			if current_node is None:
+				print("No solution")
+				return 0
+
+
+			# Found the goal
+			if current_node == end_node:
+				path = []
+				current = current_node
+				while current is not None:
+					path.append(current.node_map)
+					current = current.parent
+				return path[::-1] # Return reversed path
+
+			# Generate children
+			children = []
+			y, x = np.where(current_node.node_map == 0)
+			y = y[0]
+			x = x[0]
+			for a in [-1, 1]:
+				newx = x + a
+				if newx >= 0 and newx < self.size:
+					new_map = current_node.node_map.copy()
+					new_map[y][x] = new_map[y][newx]
+					new_map[y][newx] = 0
+					children.append(Puzzle_Node(current_node, new_map, self.size))
+			for b in [-1, 1]:
+				newy = y + b
+				if newy >= 0 and newy < self.size:
+					new_map = current_node.node_map.copy()
+					new_map[y][x] = new_map[newy][x]
+					new_map[newy][x] = 0
+					children.append(Puzzle_Node(current_node, new_map, self.size))
+
+			for child in children:
+				child.g = current_node.g + 1
+				child.h = metric_fnc(child.node_map)
+				if child.h < min_manhattan:
+					min_manhattan = child.h
+					print(child.h)
+					print(child.node_map)
+
+				# Child is on the closed list
+				if child in closed_set:
+					continue
+				elif child in open_set:
+					old = open_set[child]
+					if child < old:
+						old.previous = "Delete"
+						heapq.heappush(open_list, child)
+						open_set[child] = child
+				else:
+					heapq.heappush(open_list, child)
+					open_set[child] = child
 
 puzzle = Puzzle(use_file=True, input_file="test_map")
 
-print(puzzle.inversion_num())
+import time
+
 print(puzzle.is_sovable())
-print(puzzle.generate_answer())
+sol = puzzle.solve()
+for node in sol:
+	print(node)
+	time.sleep(1)
