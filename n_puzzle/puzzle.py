@@ -1,5 +1,6 @@
 import numpy as np
 import heapq
+import tqdm as tqdm
 
 class Puzzle_Node():
 	def __init__(self, parent=None, node_map=None, size=0, previous="None"):
@@ -38,7 +39,6 @@ class Puzzle():
 				raise Exception("Input file isnt a valid file")
 		else:
 			self.current_map = self.random_map()
-		self.solution_maps = []
 		print("map to solve : ")
 		self.show_map(self.current_map)
 		self.solution = self.generate_solution()
@@ -108,8 +108,8 @@ class Puzzle():
 			while ((x < self.size and res == 0) 
 					or (y < self.size and res == 1) 
 					or (x >= 0 and res == 2) 
-					or (y >= 0 and res == 3)) and self.current_map[y][x] not in ordered_map:
-				ordered_map.append(self.current_map[y][x])
+					or (y >= 0 and res == 3)) and data[y][x] not in ordered_map:
+				ordered_map.append(data[y][x])
 				x += (1 if res == 0 else -1) if not res % 2 else 0
 				y += (1 if res == 1 else -1) if res % 2 else 0
 			x += (-1 if res == 0 else 1) if not res % 2 else 0
@@ -128,6 +128,11 @@ class Puzzle():
 				if map_index[smaller] > curr_ind:
 					reverse_global += 1
 		return reverse_global
+
+	def hamming(self, data=None):
+		if data is None:
+			data = self.current_map
+		return np.sum(np.not_equal(data, self.solution))
 
 	def is_sovable(self):
 		return not self.inversion_num() % 2
@@ -155,19 +160,18 @@ class Puzzle():
 		sol[y][x] = 0
 		return sol
 
-	def generate_manhattan(self, data):
-		man_map = np.zeros((self.size, self.size), dtype=np.int)
-		for y in range(self.size):
-			for x in range(self.size):
-				sy, sx = np.where(self.solution == data[y][x])
-				man_map[y][x] = np.absolute(x - sx) + np.absolute(y - sy)
-		return man_map
+	def manhattan_loc(self, x, y, data):
+		sy, sx = np.where(self.solution == data[y][x])
+		return np.absolute(x - sx) + np.absolute(y - sy)
 
 	def manhattan(self, data=None):
 		if data is None:
 			data = self.current_map
-		grid = self.generate_manhattan(data)
-		return np.sum(grid)
+		man_map = np.zeros((self.size, self.size), dtype=np.int)
+		for y in range(self.size):
+			for x in range(self.size):
+				man_map[y][x] = self.manhattan_loc(x, y, data)
+		return np.sum(man_map)
 
 	def solve(self, metric="manhattan"):
 		if metric == "manhattan":
@@ -198,6 +202,7 @@ class Puzzle():
 				except:
 					current_node = None
 					break
+				#skip if the node has been deleted from the set
 				if current_node.previous == "Delete":
 					continue
 				del open_set[current_node]
@@ -207,7 +212,6 @@ class Puzzle():
 			if current_node is None:
 				print("No solution")
 				return 0
-
 
 			# Found the goal
 			if current_node == end_node:
@@ -246,7 +250,6 @@ class Puzzle():
 					print(child.h)
 					print(child.node_map)
 
-				# Child is on the closed list
 				if child in closed_set:
 					continue
 				elif child in open_set:
@@ -259,12 +262,13 @@ class Puzzle():
 					heapq.heappush(open_list, child)
 					open_set[child] = child
 
-puzzle = Puzzle(use_file=True, input_file="test_map")
+puzzle = Puzzle(size=3)
 
 import time
 
-print(puzzle.is_sovable())
-sol = puzzle.solve()
-for node in sol:
-	print(node)
-	time.sleep(1)
+if puzzle.is_sovable():
+	sol = puzzle.solve()
+	for node in sol:
+		print(node)
+else:
+	print("puzzle not solvable")
