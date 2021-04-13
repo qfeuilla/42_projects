@@ -1,6 +1,7 @@
 import numpy as np
 import heapq
-import tqdm as tqdm
+from tqdm import tqdm
+import sys
 
 class Puzzle_Node():
 	def __init__(self, parent=None, node_map=None, size=0, previous="None"):
@@ -42,6 +43,7 @@ class Puzzle():
 		print("map to solve : ")
 		self.show_map(self.current_map)
 		self.solution = self.generate_solution()
+		self.pbar = None
 
 	def map_from_file(self, file):
 		data = open(file)
@@ -164,18 +166,30 @@ class Puzzle():
 		sy, sx = np.where(self.solution == data[y][x])
 		return np.absolute(x - sx) + np.absolute(y - sy)
 
-	def manhattan(self, data=None):
-		if data is None:
-			data = self.current_map
-		man_map = np.zeros((self.size, self.size), dtype=np.int)
-		for y in range(self.size):
-			for x in range(self.size):
-				man_map[y][x] = self.manhattan_loc(x, y, data)
-		return np.sum(man_map)
+	def euclidian_loc(self, x, y, data):
+		sy, sx = np.where(self.solution == data[y][x])
+		return np.sqrt(np.square(x - sx) + np.square(y - sy))
+
+	def distance(self, _type="manhattan"):
+		if (_type == "manhattan"):
+			dist_func = self.manhattan_loc
+		else:
+			dist_func = self.euclidian_loc
+		def dist(data=None):
+			if data is None:
+				data = self.current_map
+			man_map = np.zeros((self.size, self.size), dtype=np.int)
+			for y in range(self.size):
+				for x in range(self.size):
+					man_map[y][x] = dist_func(x, y, data)
+			return np.sum(man_map)
+		return dist
 
 	def solve(self, metric="manhattan"):
-		if metric == "manhattan":
-			metric_fnc = self.manhattan
+		if metric == "hamming":
+			metric_fnc = self.hamming
+		else:
+			metric_fnc = self.distance(_type=metric)
 		
 		# Create start and end node
 		start_metric = metric_fnc(self.current_map)
@@ -192,8 +206,7 @@ class Puzzle():
 		open_set = {}
 		open_set[start_node] = start_node
 
-		min_manhattan = 1000000
-
+		min_manhattan = 10000
 		# Loop until you find the end
 		while len(open_list):
 			while True:
@@ -220,7 +233,7 @@ class Puzzle():
 				while current is not None:
 					path.append(current.node_map)
 					current = current.parent
-				return path[::-1] # Return reversed path
+				return (path[::-1], len(open_set), len(closed_set)) # Return reversed path
 
 			# Generate children
 			children = []
@@ -246,9 +259,11 @@ class Puzzle():
 				child.g = current_node.g + 1
 				child.h = metric_fnc(child.node_map)
 				if child.h < min_manhattan:
+					if self.pbar is None:
+						self.pbar = tqdm(total=child.h, file=sys.stdout)
+					else:
+						self.pbar.update(min_manhattan - child.h)
 					min_manhattan = child.h
-					print(child.h)
-					print(child.node_map)
 
 				if child in closed_set:
 					continue
@@ -262,13 +277,14 @@ class Puzzle():
 					heapq.heappush(open_list, child)
 					open_set[child] = child
 
-puzzle = Puzzle(size=3)
+puzzle = Puzzle(size=6)
 
 import time
 
 if puzzle.is_sovable():
-	sol = puzzle.solve()
-	for node in sol:
+	sol = puzzle.solve(metric="manhattan")
+	print("space complexity: {}\ntime complexity: {}".format(sol[1], sol[2]))
+	for node in sol[0]:
 		print(node)
 else:
 	print("puzzle not solvable")
