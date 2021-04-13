@@ -394,9 +394,9 @@ public:
 	float distance(std::vector<std::vector<int>> data, std::string _type="manhattan") {
 		fptr dist_funct;
 		if (_type == "manhattan")
-			dist_funct = manhattan_loc;
+			dist_funct = &NPuzzle::manhattan_loc;
 		else
-			dist_funct = euclidian_loc;
+			dist_funct = &NPuzzle::euclidian_loc;
 		float sum = 0;
 		for (int _y = 0; _y < size; _y++) {
 			for (int _x = 0; _x < size; _x++) {
@@ -407,12 +407,11 @@ public:
 	}
 
 	std::pair<std::vector<std::vector<std::vector<int>>>, std::pair<int, int>> solve(std::string metric="manhattan") {
-	//void solve(std::string metric="manhattan") {
 		fptr2 metric_fn;
 		if (metric == "hamming")
-			metric_fn = hamming;
+			metric_fn = &NPuzzle::hamming;
 		else
-			metric_fn = distance;
+			metric_fn = &NPuzzle::distance;
 		
 		std::cout << metric << " selected" << std::endl;
 		float start_metric = (this->*metric_fn)(current_map, metric);
