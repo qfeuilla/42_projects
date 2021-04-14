@@ -1,7 +1,7 @@
 # ___COMPILATION___
 
 C_COMPILER= clang++
-FLAGS= -Wall -Wextra -Werror -std=c++11
+FLAGS= -Wall -Wextra -Werror -std=c++11 -g3 -Ofast
 SRCS= npuzzle.cpp
 
 NAME= npuzzle

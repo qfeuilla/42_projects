@@ -126,6 +126,8 @@ template<> struct std::hash<Node> {
     }
 };
 
+std::vector<Node *> to_free;
+
 class NPuzzle {
 public:
 	int size;
@@ -415,18 +417,20 @@ public:
 		
 		std::cout << metric << " selected" << std::endl;
 		float start_metric = (this->*metric_fn)(current_map, metric);
-		Node start_node = Node(nullptr, current_map);
-		start_node.g = 0;
-		start_node.h = start_metric;
-		Node end_node = Node(nullptr, solution_map);
-		end_node.g = 0;
-		end_node.h = 0.;
+		Node *start_node = new Node(nullptr, current_map);
+		to_free.push_back(start_node);
+		start_node->g = 0;
+		start_node->h = start_metric;
+		Node *end_node = new Node(nullptr, solution_map);
+		to_free.push_back(end_node);
+		end_node->g = 0;
+		end_node->h = 0.;
 
 		std::priority_queue<Node, std::vector<Node>, std::greater<Node>> open_list;
-		open_list.push(start_node);
+		open_list.push(*start_node);
 		std::unordered_set<Node> closed_set;
 		std::unordered_map<Node, Node> open_set;
-		open_set[start_node] = start_node;
+		open_set[*start_node] = *start_node;
 
 		Node current_node;
 		while (open_list.size()) {
@@ -446,8 +450,9 @@ public:
 				throw TextException("All path has been explored, there is no solution");
 			}
 
-			if (current_node == end_node) {
+			if (current_node == *end_node) {
 				Node *current = new Node(current_node);
+				to_free.push_back(current);
 				std::vector<std::vector<std::vector<int>>> path;
 				std::cout << "puzzle solved !! :" << std::endl;
 				while (current != nullptr) {
@@ -481,6 +486,7 @@ public:
 					new_node.map[y][x] = new_node.map[y][newx];
 					new_node.map[y][newx] = 0;
 					new_node.parent = new Node(current_node);
+					to_free.push_back(new_node.parent);
 					children.push_back(new_node);
 				}
 			} for (int b : {-1, 1}) {
@@ -490,6 +496,7 @@ public:
 					new_node.map[y][x] = new_node.map[newy][x];
 					new_node.map[newy][x] = 0;
 					new_node.parent = new Node(current_node);
+					to_free.push_back(new_node.parent);
 					children.push_back(new_node);
 				}
 			}
@@ -497,8 +504,9 @@ public:
 			for (Node child : children) {
 				child.g = current_node.g + 1;
 				child.h = (this->*metric_fn)(child.map, metric);
-				if (closed_set.find(child) != closed_set.end())
+				if (closed_set.find(child) != closed_set.end()) {
 					continue;
+				}
 				else if (open_set.find(child) != open_set.end()) {
 					Node old = open_set[child];
 					if (child < old) {
@@ -539,7 +547,7 @@ int main(int ac, char **av) {
 	} else {
 		int map_size = 0;
 		while (map_size < 3 || map_size > 6) {
-			std::cout << "Choose a size for the map (> 3) " << std::endl;
+			std::cout << "Choose a size for the map (>= 3) " << std::endl;
 			std::cin >> map_size;
 			if (map_size > 6)
 				std::cout << "It is too big for me to do it in less than 1 minute";
@@ -562,6 +570,9 @@ int main(int ac, char **av) {
 	for (std::vector<std::vector<int>> map : path) {
 		std::cout << std::endl;
 		pzl.print_map(map);
+	}
+	for (Node *n : to_free) {
+		delete n;
 	}
 	std::cout << "space complexity: " << ans.second.first << " time complexity: " << ans.second.second << std::endl;
 	return 0;

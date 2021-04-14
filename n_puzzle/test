@@ -1,0 +1,138 @@
+clang++ -Wall -Wextra -Werror -std=c++11 -g3 -Ofast -I . -c npuzzle.cpp -o npuzzle.o
+clang++ -Wall -Wextra -Werror -std=c++11 -g3 -Ofast -I . npuzzle.o -o npuzzle
+Choose a metric function
+1 - Hamming
+2 - Euclidian
+3 - Manhattan
+Choose a size for the map (>= 3) 
+Here the map to solve :
+8  3  4  
+0  6  5  
+2  1  7  
+Here the solution we aim for :
+1  2  3  
+8  0  4  
+7  6  5  
+euclidian selected
+puzzle solved !! :
+
+8  3  4  
+0  6  5  
+2  1  7  
+
+8  3  4  
+2  6  5  
+0  1  7  
+
+8  3  4  
+2  6  5  
+1  0  7  
+
+8  3  4  
+2  0  5  
+1  6  7  
+
+8  3  4  
+0  2  5  
+1  6  7  
+
+8  3  4  
+1  2  5  
+0  6  7  
+
+8  3  4  
+1  2  5  
+6  0  7  
+
+8  3  4  
+1  2  5  
+6  7  0  
+
+8  3  4  
+1  2  0  
+6  7  5  
+
+8  3  0  
+1  2  4  
+6  7  5  
+
+8  0  3  
+1  2  4  
+6  7  5  
+
+8  2  3  
+1  0  4  
+6  7  5  
+
+8  2  3  
+1  7  4  
+6  0  5  
+
+8  2  3  
+1  7  4  
+0  6  5  
+
+8  2  3  
+0  7  4  
+1  6  5  
+
+0  2  3  
+8  7  4  
+1  6  5  
+
+2  0  3  
+8  7  4  
+1  6  5  
+
+2  7  3  
+8  0  4  
+1  6  5  
+
+2  7  3  
+0  8  4  
+1  6  5  
+
+2  7  3  
+1  8  4  
+0  6  5  
+
+2  7  3  
+1  8  4  
+6  0  5  
+
+2  7  3  
+1  0  4  
+6  8  5  
+
+2  0  3  
+1  7  4  
+6  8  5  
+
+0  2  3  
+1  7  4  
+6  8  5  
+
+1  2  3  
+0  7  4  
+6  8  5  
+
+1  2  3  
+7  0  4  
+6  8  5  
+
+1  2  3  
+7  8  4  
+6  0  5  
+
+1  2  3  
+7  8  4  
+0  6  5  
+
+1  2  3  
+0  8  4  
+7  6  5  
+
+1  2  3  
+8  0  4  
+7  6  5  
+space complexity: 464 time complexity: 557
