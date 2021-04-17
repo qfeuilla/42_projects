@@ -571,9 +571,8 @@ int main(int ac, char **av) {
 		std::cout << std::endl;
 		pzl.print_map(map);
 	}
-	for (Node *n : to_free) {
+	for (Node *n : to_free)
 		delete n;
-	}
 	std::cout << "space complexity: " << ans.second.first << " time complexity: " << ans.second.second << std::endl;
 	return 0;
 }
