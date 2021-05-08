@@ -566,6 +566,7 @@ int main(int ac, char **av) {
 	} else {
 		ans = pzl.solve("manhattan");
 	}
+	std::cout << "number of steps to solve : " << path.size() << std::endl; 
 	std::vector<std::vector<std::vector<int>>> path = ans.first;
 	for (std::vector<std::vector<int>> map : path) {
 		std::cout << std::endl;
